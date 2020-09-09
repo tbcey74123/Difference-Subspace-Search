@@ -1,0 +1,10 @@
+{
+  "dataset": "GANSynth",
+  "weights_path": "GANSynth/acoustic_only",
+  "output_path": "GANSynth/",
+  "cases_path": "GANSynth/user_study.txt",
+  "pool_path": "GANSynth/random_pool.txt",
+  "range": 3.71,
+  "time": 120,
+  "sample_rate": 16000
+}

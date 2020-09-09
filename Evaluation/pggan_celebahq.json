@@ -1,0 +1,8 @@
+{
+  "dataset": "PGGAN_celebahq",
+  "weights_path": "PGGAN/karras2018iclr-celebahq-1024x1024.pkl",
+  "output_path": "PGGAN_celebahq/",
+  "cases_path": "PGGAN_celebahq/user_study.txt",
+  "range": 3.89,
+  "time": 180
+}
