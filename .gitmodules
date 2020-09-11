@@ -1,0 +1,3 @@
+[submodule "sequential-line-search"]
+	path = sequential-line-search
+	url = https://github.com/yuki-koyama/sequential-line-search
