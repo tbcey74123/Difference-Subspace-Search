@@ -6,7 +6,7 @@ This is the official implementation of Human-in-the-Loop Differential Subspace S
 The pretrained weights of the nerual networks are not maintained here.  
 Please download the weights from  
 https://drive.google.com/file/d/1nm-tU-jZm5AQbxJlx2L-UvlUNx4bc6G-/view?usp=sharing  
-and put the `pretrained_weights` folder to `[path/to/this/repositoy]/` before running the codes using neural network
+and put the `pretrained_weights` folder to `[path/to/this/repositoy]/` before running the codes using neural networks.
 
 ## Environment Settings
 
@@ -22,7 +22,7 @@ The core requirements across this project is listed below.
   
 ### Other Dependencies
 
-Please check the dependencies according to target script.  
+Please check the dependencies according to your target script.  
 For example, if you are going to try our Application using GANSynth model, you must make sure the requirements for GUI & GANSynth are corrected installed.
 
 #### Requirements for GUI
@@ -53,7 +53,7 @@ Its Python bindings can be installed via `pip`:
 pip install ./sequential-line-search
 ```
 
-If you failed to install the library with `pip` under Windows, you can choose to manually compile it using `cmake` and put the compiled `pyd` file under `[path/to/this/repositoy]/utils`
+If you failed to install the library with `pip` under Windows, you can choose to manually compile it using `cmake` and put the compiled `pyd` file under `[path/to/this/repositoy]/utils`.
 
 ## Experiments
 
@@ -62,7 +62,6 @@ If you failed to install the library with `pip` under Windows, you can choose to
 The code to generate the result shown in the 4.2 section in our paper is `[path/to/this/repositoy]/Experiments/synthetic_experiment_local.py`.
 
 You can execute the script by
-
 ```bash
 cd Experiments
 python synthetic_experiment_local.py [--test]
@@ -87,14 +86,13 @@ Add `--test` to have a test run to make sure the environments are corrected set.
 
 The randomly intialized variables can be found here:  
 https://drive.google.com/drive/folders/1HiEbEd6PhBUWbPwZos5Fmr9WUbsQTKY1?usp=sharing  
-Please make sure the path is correct, i.e. the `synthetic_experiment_global` should be inside the `[path/to/this/repositoy]/Evaluation/` and the data structure should be organized as those in the drive.
+Please make sure the path is correct, i.e. the `synthetic_experiment_global` should be put inside the `[path/to/this/repositoy]/Evaluation/` and the data structure should be organized as those in the drive.
 
 ### MNIST
 
 The code to generate the result shown in the 5.1 section in our paper is `[path/to/this/repositoy]/Experiments/mnist_experiment_global.py`.
 
 You can execute the script by
-
 ```bash
 cd Experiments
 python mnist_experiment_global.py [--test]
@@ -110,7 +108,6 @@ Please put the extracted file `mnist_experiment_global` into `[path/to/this/repo
 The code to perform the user study shown in the 5.2 section in our paper is `[path/to/this/repositoy]/Evaluation/evaluate.py`.
 
 You can execute the script by
-
 ```bash
 cd Evaluation
 python evaluate.py setting_json subject_index
@@ -120,7 +117,6 @@ The legal option for `setting_json` is either `pggan_celebahq.json` or `gansynth
 ## Application
 
 You can play with our application by
-
 ```bash
 cd Application
 python search.py dataset [--output_path output_path] [--initial initial_file]
