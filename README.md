@@ -40,7 +40,7 @@ For example, if you are going to try our Application using GANSynth model, you m
 #### Requirements for IMGAN
 
 * PyMCubes (`pip install PyMCubes`)
- * check https://github.com/pmneila/PyMCubes
+  * check https://github.com/pmneila/PyMCubes
 
 ## Sequential Line Search
 
