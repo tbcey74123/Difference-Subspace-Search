@@ -119,11 +119,12 @@ The legal option for `setting_json` is either `pggan_celebahq.json` or `gansynth
 You can play with our application by
 ```bash
 cd Application
-python search.py dataset [--output_path output_path] [--initial initial_file]
+python search.py dataset [--output_path output_path] [--initial initial_file] [--use_approx USE_APPROX]
 ```
 The legal option for `dataset` is `MNIST`, `PGGAN_celebahq`, `GANSynth`, `IMGAN_flight` and `IMGAN_chair`.  
 Add `--output_path` to specify the saving path and add `--initial` to specify the inital data.  
 The `initial_file` should be a text file, where the 1st line contains the latent size and the second line contains the latent variable with each dimension separated with a space.
+Set `USE_APPROX` to `False` to make use of raw jacobian, otherwise the stochastic jacobian mentioned in the paper.
 
 ### Application Guide
 
