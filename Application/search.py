@@ -11,6 +11,7 @@ if __name__ == "__main__":
     parser.add_argument('dataset', help='desired dataset', choices=['MNIST', 'PGGAN_celebahq', 'GANSynth', 'IMGAN_flight', 'IMGAN_chair'])
     parser.add_argument('--output_path', help='where the saved results would be put', default='.')
     parser.add_argument('--initial', help='intial file')
+    parser.add_argument('--use_approx', help='Use stochastic jacobian', default=True)
     args = parser.parse_args()
 
     init_latent = None
@@ -32,7 +33,7 @@ if __name__ == "__main__":
         from SearchUI import ImageSearchUI
         from models.MNISTGenerator import MNISTGenerator
 
-        model = MNISTGenerator()
+        model = MNISTGenerator(args.use_approx)
         weights_path = '../pretrained_weights/MNIST/model.ckpt-155421'
         model.load_model(weights_path)
         title = "MNIST"
@@ -41,19 +42,19 @@ if __name__ == "__main__":
         from models.PGGANWrapper import PGGANWrapper
 
         weights_path = '../pretrained_weights/PGGAN/karras2018iclr-celebahq-1024x1024.pkl'
-        model = PGGANWrapper(weights_path)
+        model = PGGANWrapper(weights_path, args.use_approx)
         title = "PG-GAN"
     elif dataset == 'GANSynth':
         from SearchUI import AudioSearchUI
         from models.GANSynthWrapper import GANSynthWrapper
 
-        model = GANSynthWrapper('../pretrained_weights/GANSynth/acoustic_only', 16000)
+        model = GANSynthWrapper('../pretrained_weights/GANSynth/acoustic_only', 16000, args.use_approx)
         title = "GANSynth"
     elif dataset == 'IMGAN_flight':
         from SearchUI import OpenGLSearchUI
         from models.IMGAN import IMGAN
 
-        model = IMGAN()
+        model = IMGAN(args.use_approx)
         weights_path1 = '../pretrained_weights/IMGAN_flight/02691156_vox128_z_128_128/ZGAN.model-10000'
         weights_path2 = '../pretrained_weights/IMGAN_flight/02691156_vox128_64/IMAE.model-194'
         model.load_model(weights_path1, weights_path2)
@@ -62,7 +63,7 @@ if __name__ == "__main__":
         from SearchUI import OpenGLSearchUI
         from models.IMGAN import IMGAN
 
-        model = IMGAN()
+        model = IMGAN(args.use_approx)
         weights_path1 = '../pretrained_weights/IMGAN_chair/03001627_vox_z_128_128/ZGAN.model-10000'
         weights_path2 = '../pretrained_weights/IMGAN_chair/03001627_vox_64/IMAE.model-191'
         model.load_model(weights_path1, weights_path2)

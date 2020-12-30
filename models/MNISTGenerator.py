@@ -6,8 +6,8 @@ def lrelu(inputs, alpha=0.2):
     return tf.maximum(alpha * inputs, inputs)
 
 class MNISTGenerator(GenerativeModel):
-    def __init__(self):
-        super(MNISTGenerator, self).__init__()
+    def __init__(self, use_approx=True):
+        super(MNISTGenerator, self).__init__(use_approx=use_approx)
 
         self.latent_size = 64
         self.data_size = (28, 28)
@@ -153,30 +153,17 @@ class MNISTGenerator(GenerativeModel):
         all_data = np.clip(np.rint(all_data * 255.0), 0.0, 255.0).astype(np.uint8)  # [-1,1] => [0,255]
         return all_data
 
-    def calc_model_gradient(self, latent_vector, n=100, idx=None):
-        # if idx is None:
-        #     # idx = np.random.choice(28 * 28, n, replace=False).reshape(-1, 1)
-        #     # idx = np.arange(100).reshape(-1, 1)
-        #     idx = np.arange(784).reshape(-1, 1)
-        # gradient = self.sess.run(self.gradient, feed_dict={self.z: latent_vector.reshape(1, -1), self.random_idx: idx})
-        # gradient = gradient.reshape(-1, 64)
-        # return gradient
+    def calc_model_gradient(self, latent_vector):
+        if self.use_approx:
+            jacobian = self.calc_model_gradient_FDM(latent_vector, delta=1e-2)
+            return jacobian
+        else:
+            idx = np.arange(784).reshape(-1, 1)
+            gradient = self.sess.run(self.gradient, feed_dict={self.z: latent_vector.reshape(1, -1), self.random_idx: idx})
+            gradient = gradient.reshape(-1, 64)
+            return gradient
 
-        # tf_grads = []
-        # reshape_gen_x = tf.reshape(self.gen_x, [-1, 784])
-        # for i in range(128):
-        #     tf_grads.append(tf.gradients(reshape_gen_x[..., i], self.z))
-        #
-        # jacobian = self.sess.run(tf_grads, feed_dict={self.z: latent_vector})
-        # jacobian = np.array(jacobian)
-        # return jacobian
-        jacobian =  self.calc_model_gradient2(latent_vector, delta=1e-2)
-        return jacobian
-        # if idx is None:
-        #     idx = np.random.choice(28 * 28, n, replace=False)
-        # return jacobian[idx]
-
-    def calc_model_gradient2(self, latent_vector, delta=1e-4):
+    def calc_model_gradient_FDM(self, latent_vector, delta=1e-4):
         sample_latents = np.repeat(latent_vector.reshape(1, -1), repeats=self.latent_size + 1, axis=0)
         sample_latents[1:] += np.identity(self.latent_size) * delta
 
@@ -184,17 +171,7 @@ class MNISTGenerator(GenerativeModel):
         sample_datas = sample_datas.reshape(-1, 784)
 
         jacobian = (sample_datas[1:] - sample_datas[0]).T / delta
-        # jacobian = jacobian[:100]
         return jacobian
-
-    def test_model_gradient(self, latent_vector):
-        full_jacobian = self.calc_model_gradient(latent_vector.reshape(1, -1))
-        return full_jacobian, full_jacobian
-
-    def calc_energy_gradient(self, latent_vector, target_data):
-        gradient = self.sess.run(self.energy_gradient, feed_dict={self.z: latent_vector, self.target_data: target_data})
-        gradient = gradient.reshape(-1, 64)
-        return gradient
 
     def save_model(self, name):
         with self.graph.as_default():

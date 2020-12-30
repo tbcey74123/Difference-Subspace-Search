@@ -143,7 +143,7 @@ class SearchUI(QtWidgets.QWidget):
         self.jacobian_mask = np.ones(self.jacobian_vhs.shape[0], dtype=bool)
 
         self.importance_sampling_subspace_basis()
-        print('end updating subspace!')
+        # print('end updating subspace!')
 
     def importance_sampling_subspace_basis(self):
         if self.jacobian_s[self.jacobian_mask].shape[0] <= 0:
@@ -160,7 +160,7 @@ class SearchUI(QtWidgets.QWidget):
 
         self.jacobian_mask[np.arange(self.jacobian_vhs.shape[0])[self.jacobian_mask][idx]] = False
 
-        print('Finish sampling subspace!!')
+        # print('Finish sampling subspace!!')
 
     def get_slider_point(self, t):
         new_point = (self.center_latent - self.subspace_basis * self.subspace_range) * (1 - t) + (self.center_latent + self.subspace_basis * self.subspace_range) * t

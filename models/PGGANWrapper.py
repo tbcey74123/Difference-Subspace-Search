@@ -7,8 +7,8 @@ import numpy as np
 from models.GenerativeModel import GenerativeModel
 
 class PGGANWrapper(GenerativeModel):
-    def __init__(self, pkl_path):
-        super(PGGANWrapper, self).__init__()
+    def __init__(self, pkl_path, use_approx=True):
+        super(PGGANWrapper, self).__init__(use_approx=use_approx)
 
         self.latent_size = 512
         self.data_size = (1024, 1024)
@@ -56,28 +56,14 @@ class PGGANWrapper(GenerativeModel):
             images[n * batch_size:] = tmp_images
         return images
 
-    def calc_model_gradient(self, latent_vectors, n=50, idx=None):
-        if idx is None:
-            idx = np.random.choice(3 * 1024 * 1024, n, replace=False).reshape(-1, 1)
+    def calc_model_gradient(self, latent_vectors):
+        if self.use_approx:
+            idx = np.random.choice(3 * 1024 * 1024, 50, replace=False).reshape(-1, 1)
+        else:
+            idx = np.arange(3 * 1024 * 1024).reshape(-1, 1)
         gradient = tf.get_default_session().run(self.gradient, feed_dict={self.input_latents: latent_vectors, self.input_labels: np.zeros((latent_vectors.shape[0], 0)), self.random_idx: idx})
         gradient = gradient.reshape(-1, 512)
         return gradient
-
-    def test_model_gradient(self, latent_vector, idx = None):
-        if idx is None:
-            delta = 1e-2
-            sample_latents = np.repeat(latent_vector.reshape(1, -1), repeats=self.latent_size + 1, axis=0)
-            sample_latents[1:] += np.identity(self.latent_size) * delta
-
-            sample_datas = self.decode(sample_latents).reshape(self.latent_size + 1, -1).astype(np.float32)
-
-            for i in range(1, sample_datas.shape[0]):
-                sample_datas[i] -= sample_datas[0]
-            sample_datas /= delta
-
-            return sample_datas[1:].T, None
-        else:
-            return None, self.calc_model_gradient(latent_vector.reshape(1, -1), idx=idx.reshape(-1, 1))
 
     def get_random_latent(self):
         return np.random.normal(0, 1, self.latent_size)

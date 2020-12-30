@@ -2,10 +2,12 @@ import tensorflow as tf
 import numpy as np
 
 class GenerativeModel(object):
-    def __init__(self):
+    def __init__(self, use_approx=True):
         self.latent_size = None
         self.data_size = None
         self.data_dim = None
+        self.use_approx = use_approx
+        print("use_approx = ", self.use_approx)
 
     def build(self):
         pass
@@ -16,7 +18,7 @@ class GenerativeModel(object):
     def decode(self, latent_vectors):
         pass
 
-    def calc_model_gradient(self, latent_vector, n=100, idx=None):
+    def calc_model_gradient(self, latent_vector):
         pass
 
     def get_random_latent(self):

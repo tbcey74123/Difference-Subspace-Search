@@ -9,7 +9,8 @@ from IMGAN_ops.ops import *
 from models.GenerativeModel import  GenerativeModel
 
 class IMGAN(GenerativeModel):
-    def __init__(self):
+    def __init__(self, use_approx=True):
+        super(IMGAN, self).__init__(use_approx=use_approx)
 
         self.latent_size = 128
         self.data_size = None
@@ -200,17 +201,17 @@ class IMGAN(GenerativeModel):
         self.aux_z = aux_z
 
 
-    def calc_model_gradient(self, latent_vector, n=50, idx=None):
-        if idx is None:
-            idx = np.random.choice(self.time_per_axis3 * 32768, n, replace=False)
+    def calc_model_gradient(self, latent_vector):
+        if self.use_approx:
+            idx = np.random.choice(self.time_per_axis3 * 32768, 50, replace=False)
+        else:
+            idx = np.arange(self.time_per_axis3 * 32768).reshape(-1, 1)
 
         counter = 0
         gradient = np.zeros((idx.shape[0], self.z_dim))
         for i in range(self.time_per_axis3):
-            mask = (idx > i * 32768) & (idx < (i + 1) * 32768)
+            mask = (idx >= i * 32768) & (idx < (i + 1) * 32768)
             tmp_idx = idx[mask] - i * 32768
-        # grid_idx = np.random.choice(self.time_per_axis3)
-        # tmp_idx = np.random.choice(32768, n, replace=False)
             tmp_gradient = self.sess.run(self.gradient, feed_dict={self.z: latent_vector, self.point_coord: self.coords[i], self.random_idx: tmp_idx.reshape(-1, 1)}).reshape(-1, self.latent_size)
             gradient[counter:counter + tmp_gradient.shape[0], :] = tmp_gradient
             counter += tmp_gradient.shape[0]
@@ -236,24 +237,6 @@ class IMGAN(GenerativeModel):
                                                   })
                         model_floats[t, self.aux_x + i + 1, self.aux_y + j + 1, self.aux_z + k + 1] = np.reshape(model_out, [self.gen_num_per_axis, self.gen_num_per_axis, self.gen_num_per_axis])
         return model_floats.reshape(latent_vector.shape[0], self.num_per_axis + 2, self.num_per_axis + 2, self.num_per_axis + 2)
-
-
-    def test_model_gradient(self, latent_vector, idx = None):
-        if idx is None:
-            delta = 1e-2
-            sample_latents = np.repeat(latent_vector.reshape(1, -1), repeats=self.latent_size + 1, axis=0)
-            sample_latents[1:] += np.identity(self.latent_size) * delta
-
-            sample_datas = self.decode(sample_latents).reshape(self.latent_size + 1, -1)
-
-            full_jacobian = (sample_datas[1:] - sample_datas[0]).T / delta
-
-            return full_jacobian, None
-        else:
-            # grid_idx = np.random.choice(self.time_per_axis3)
-            # tmp_idx = np.random.choice(32768, 50, replace=False)
-            # stochastic_jacobian =  full_jacobian[tmp_idx + grid_idx * 32768]
-            return None, self.calc_model_gradient(latent_vector.reshape(1, -1), idx=idx)
 
     def load_model(self, zgan_name, imae_name):
         with self.graph.as_default():

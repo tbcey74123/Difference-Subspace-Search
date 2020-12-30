@@ -12,7 +12,9 @@ import json
 from models.GenerativeModel import GenerativeModel
 
 class GANSynthWrapper(GenerativeModel):
-    def __init__(self, ckpt_path, data_size):
+    def __init__(self, ckpt_path, data_size, use_approx=True):
+        super(GANSynthWrapper, self).__init__(use_approx=use_approx)
+
         self.latent_size = 256
         self.data_size = data_size
         self.data_dim = 1
@@ -39,69 +41,34 @@ class GANSynthWrapper(GenerativeModel):
             # slices = tf.gather(tf.reshape(self.model.fake_data_ph[..., 0], [-1, 128 * 1024]), self.random_idx[..., 0], axis=1)
             self.gradient = self.jacobian(slices, self.model.noises_ph, parallel_iterations=1)
 
-    def calc_model_gradient(self, latent_vector, n=10, idx=None):
-        # if idx is None:
-        #     idx = np.random.choice(self.data_size // 2, n, replace=False).reshape(-1, 1)
-        #     # idx = np.arange(2).reshape(-1, 1)
-        #
-        # extend_z = np.zeros((self.batch_size, self.latent_size))
-        # min_size = np.minimum(latent_vector.shape[0], 8)
-        # extend_z[:min_size] = latent_vector[:min_size]
-        #
-        # pitches = []
-        # for i in range(extend_z.shape[0]):
-        #     pitches.append(50)
-        # pitches = np.array(pitches)
-        # labels = self.model._pitches_to_labels(pitches)
-        #
-        # gradient = self.sess.run(self.gradient, feed_dict={self.model.labels_ph: labels, self.model.noises_ph: extend_z, self.random_idx: idx})[0]
-        # # gradient += (np.random.rand(2, 256) - 0.5)
-        # return gradient
-        return self.calc_model_gradient2(latent_vector, delta=5e-5)
+    def calc_model_gradient(self, latent_vector):
+        if self.use_approx:
+            jacobian = self.calc_model_gradient_FDM(latent_vector, delta=5e-5)
+            return jacobian
+        else:
+            idx = np.arange(self.data_size).reshape(-1, 1)
+            extend_z = np.zeros((self.batch_size, self.latent_size))
+            min_size = np.minimum(latent_vector.shape[0], 8)
+            extend_z[:min_size] = latent_vector[:min_size]
 
-    def calc_model_gradient2(self, latent_vector, delta=1e-4):
-        # sample_latents = np.repeat(latent_vector, repeats=self.latent_size * 2, axis=0)
-        # sample_latents[:self.latent_size] -= np.identity(self.latent_size) * delta * 0.5
-        # sample_latents[self.latent_size:] += np.identity(self.latent_size) * delta * 0.5
-        sample_latents = np.repeat(latent_vector, repeats=self.latent_size + 1, axis=0)
-        sample_latents[1:] += np.identity(self.latent_size) * delta
+            pitches = []
+            for i in range(extend_z.shape[0]):
+                pitches.append(50)
+            pitches = np.array(pitches)
+            labels = self.model._pitches_to_labels(pitches)
 
-        # pitches = []
-        # for i in range(sample_latents.shape[0]):
-        #     pitches.append(50)
-        # pitches = np.array(pitches)
-        # sample_datas = self.model.generate_spectrograms_from_z(sample_latents, pitches).reshape(self.latent_size * 2, -1)
-        # jacobian = (sample_datas[self.latent_size:] - sample_datas[:self.latent_size]).T / delta
-        # # jacobian = jacobian[np.random.choice(self.data_size, 1024)]
-        # jacobian = jacobian[np.random.choice(20 * 1024, 1024)]
-        # return jacobian
+            gradient = self.sess.run(self.gradient, feed_dict={self.model.labels_ph: labels, self.model.noises_ph: extend_z, self.random_idx: idx})[0]
+            return gradient
 
-        sample_datas = self.decode(sample_latents)
-
-        # jacobian = (sample_datas[self.latent_size:] - sample_datas[:self.latent_size]).T / delta
-        jacobian = (sample_datas[1:] - sample_datas[0]).T / delta
-        idx = np.random.choice(self.data_size, 1024, replace=False)
-        jacobian = jacobian[idx]
-        # start_idx = np.random.choice(self.data_size // 2)
-        # jacobian = jacobian[np.arange(start_idx, start_idx + 1024)]
-        return jacobian
-
-    def test_model_gradient(self, latent_vector, idx = None):
-        delta = 1e-4
+    def calc_model_gradient_FDM(self, latent_vector, delta=1e-4):
         sample_latents = np.repeat(latent_vector.reshape(1, -1), repeats=self.latent_size + 1, axis=0)
         sample_latents[1:] += np.identity(self.latent_size) * delta
 
         sample_datas = self.decode(sample_latents)
 
-        full_jacobian = (sample_datas[1:] - sample_datas[0]).T / delta
-        if idx is None:
-            return full_jacobian, None
-
-        # idx = np.random.choice(self.data_size, sample_n, replace=False)
-        # stochastic_jacobian = full_jacobian[idx]
-        stochastic_jacobian = full_jacobian[idx]
-
-        return None, stochastic_jacobian
+        jacobian = (sample_datas[1:] - sample_datas[0]).T / delta
+        idx = np.random.choice(self.data_size, 1024, replace=False)
+        return jacobian[idx]
 
     def generate_data(self, n=1, z=None):
         if z is None:
